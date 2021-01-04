@@ -1,9 +1,12 @@
+/* import shared library */
+@Library('eazytraining-shared-library')_
+
 pipeline {
      environment {
        IMAGE_NAME = "alpinehelloworld"
        IMAGE_TAG = "latest"
-       STAGING = "eazytraining-stag"
-       PRODUCTION = "eazytraining-prod"
+       STAGING = "eazytraining-staging"
+       PRODUCTION = "eazytraining-production"
      }
      agent none
      stages {
@@ -31,7 +34,7 @@ pipeline {
            steps {
               script {
                 sh '''
-                    curl http://172.17.0.1 | grep -q "Hello world!"
+                    curl http://localhost | grep -q "Hello world!"
                 '''
               }
            }
@@ -86,12 +89,11 @@ pipeline {
         }
      }
   }
-post {
-       success {
-         slackSend (color: '#00FF00', message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-         }
-      failure {
-            slackSend (color: '#FF0000', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-          }   
-    }     
+  post {
+       always {
+       script {
+         slackNotifier currentBuild.result
+     }
+    }  
+    }
 }
